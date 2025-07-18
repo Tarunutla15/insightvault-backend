@@ -1,3 +1,5 @@
+# 📁 insightvault_backend/app.py
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from summarizer import generate_summary
@@ -8,28 +10,37 @@ from models import Insight
 from dotenv import load_dotenv
 from supabase import create_client
 import os
+from loguru import logger
+
 load_dotenv()
 
 app = FastAPI()
+
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+logger.add("logs/app.log", rotation="500 KB", level="INFO")
+
 class AnalyzeRequest(BaseModel):
     text: str
-
-
 
 @app.post("/analyze")
 async def analyze_text(payload: AnalyzeRequest):
     text = payload.text.strip()
+    logger.info(f"Received text of length {len(text)}")
+
     if not text:
+        logger.warning("Empty text received")
         raise HTTPException(status_code=400, detail="Text input cannot be empty.")
 
     try:
         summary = generate_summary(text)
         tags = extract_tags(text)
         sentiment = analyze_sentiment(text)
+
+        logger.info("Successfully analyzed text")
 
         # Save to DB
         db = SessionLocal()
@@ -42,6 +53,7 @@ async def analyze_text(payload: AnalyzeRequest):
         db.add(new_entry)
         db.commit()
         db.close()
+        logger.info("Saved insight to database")
 
         return {
             "summary": summary,
@@ -49,13 +61,16 @@ async def analyze_text(payload: AnalyzeRequest):
             "sentiment": sentiment
         }
     except Exception as e:
+        logger.exception("Error during analysis")
         raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/history")
 async def get_history():
     try:
         db = SessionLocal()
         results = db.query(Insight).order_by(Insight.created_at.desc()).limit(10).all()
         db.close()
+        logger.info("Fetched history from database")
 
         return [
             {
@@ -68,4 +83,5 @@ async def get_history():
             for i in results
         ]
     except Exception as e:
+        logger.exception("Error fetching history")
         raise HTTPException(status_code=500, detail=str(e))

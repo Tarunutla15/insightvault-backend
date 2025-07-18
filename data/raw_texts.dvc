@@ -1,6 +1,6 @@
 outs:
-- md5: d751713988987e9331980363e24189ce.dir
-  size: 0
-  nfiles: 0
+- md5: 014b1e4deeb2117fbd319d099ad2f4fc.dir
+  size: 1395
+  nfiles: 3
   hash: md5
   path: raw_texts

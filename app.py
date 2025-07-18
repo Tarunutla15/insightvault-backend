@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 import os
 from loguru import logger
+from datetime import datetime
 
 load_dotenv()
 
@@ -54,6 +55,17 @@ async def analyze_text(payload: AnalyzeRequest):
         db.commit()
         db.close()
         logger.info("Saved insight to database")
+
+        # Save to DVC-tracked directories
+        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        os.makedirs("data/raw_texts", exist_ok=True)
+        os.makedirs("data/summaries", exist_ok=True)
+
+        with open(f"data/raw_texts/text_{timestamp}.txt", "w", encoding="utf-8") as f:
+            f.write(text)
+
+        with open(f"data/summaries/summary_{timestamp}.txt", "w", encoding="utf-8") as f:
+            f.write(summary)
 
         return {
             "summary": summary,

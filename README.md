@@ -65,3 +65,28 @@ python init_db.py
 
 ### 6. Run the Server
 uvicorn app:app --reload --port 8000
+```
+## 📡 API Usage
+
+### 🔍 `/analyze` - Analyze Text
+
+Performs summarization, keyword extraction, and sentiment analysis on input text.
+
+**POST** `/analyze`
+
+#### 🔸 Request Body (JSON)
+```json
+{
+  "text": "Your full text input here"
+}
+```
+
+🔸 Response Example
+```json
+{
+  "summary": "Short summary of the input text...",
+  "tags": ["keyword1", "keyword2", "keyword3"],
+  "sentiment": "POSITIVE"
+}
+```
+
